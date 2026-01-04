@@ -50,15 +50,18 @@
           "tailwind-merge": "*",
           "url": "*",
           "vaul": "^1.1.2",
-          "vite": "*"
-      },
-      "devDependencies": {
-          "@types/node": "^20.10.0",
-          "@vitejs/plugin-react-swc": "^3.10.2",
-          "vite": "6.3.5"
-      },
-      "scripts": {
-          "dev": "vite",
-          "build": "vite build"
-      }
+      "vite": "*"
+  },
+  "devDependencies": {
+      "@types/node": "^20.10.0",
+      "@vitejs/plugin-react-swc": "^3.10.2",
+      "vite": "6.3.5",
+      "vite-plugin-singlefile": "^2.3.0",
+      "papaparse": "^5.4.1"
+  },
+  "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "build:storyline": "vite build -c vite.config.storyline.ts && cp questions.csv dist-storyline/"
   }
+}

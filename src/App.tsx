@@ -12,7 +12,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { PIECES, EMPTY_CELL, GRID_WIDTH, GRID_HEIGHT } from './components/gameLogic';
 import { HighScoreManager } from './components/highScoreLogic';
 import { soundEffects } from './components/soundEffects';
-import { getRandomQuestion, calculateQuestionPoints, type Question } from './components/questionBank';
+import { getRandomQuestion, calculateQuestionPoints, type Question } from './components/questionService';
 import type { GameState, TetrominoType } from './components/gameLogic';
 import type { HighScoreEntry, HighScoreStats } from './components/highScoreLogic';
 
@@ -51,6 +51,26 @@ export default function App() {
   const gamePhaseRef = useRef<GamePhase>(gamePhase);
   const isPlayingRef = useRef<boolean>(gameState.isPlaying);
   const usedQuestionIdsRef = useRef<string[]>(usedQuestionIds);
+
+  const loadNextQuestion = useCallback(async () => {
+    try {
+      const nextQuestion = await getRandomQuestion(usedQuestionIdsRef.current);
+      setCurrentQuestion(nextQuestion);
+      setUsedQuestionIds(prev => [...prev, String(nextQuestion.id)]);
+      setGamePhase('question');
+      setGameState(prev => ({ ...prev, isPlaying: false }));
+    } catch (error) {
+      console.error('Failed to load question', error);
+    }
+  }, []);
+
+  const startQuestionFlow = useCallback(() => {
+    setQuestionsAnswered(0);
+    setUsedQuestionIds([]);
+    usedQuestionIdsRef.current = [];
+    dropIntervalRef.current = 1000;
+    loadNextQuestion().catch(() => {});
+  }, [loadNextQuestion]);
 
   // Generate random piece
   const getRandomPiece = useCallback((): TetrominoType => {
@@ -171,6 +191,8 @@ export default function App() {
 
   // Move piece
   const movePiece = useCallback((direction: 'left' | 'right' | 'down' | 'rotate' | 'hardDrop') => {
+    let shouldAskQuestion = false;
+
     setGameState(prevState => {
       if (!prevState.isPlaying || !prevState.currentPiece || prevState.gameOver) {
         return prevState;
@@ -225,11 +247,7 @@ export default function App() {
 
             // Check if a line was cleared - trigger question
             if (linesCleared > 0) {
-              // Get next question
-              const nextQuestion = getRandomQuestion(usedQuestionIdsRef.current);
-              setCurrentQuestion(nextQuestion);
-              setUsedQuestionIds(prev => [...prev, nextQuestion.id]);
-              setGamePhase('question');
+              shouldAskQuestion = true;
               newState.isPlaying = false; // Pause game for question
             } else {
               // No lines cleared - spawn new piece normally
@@ -283,11 +301,7 @@ export default function App() {
 
           // Check if a line was cleared - trigger question
           if (linesClearedHD > 0) {
-            // Get next question
-            const nextQuestion = getRandomQuestion(usedQuestionIdsRef.current);
-            setCurrentQuestion(nextQuestion);
-            setUsedQuestionIds(prev => [...prev, nextQuestion.id]);
-            setGamePhase('question');
+            shouldAskQuestion = true;
             newState.isPlaying = false; // Pause game for question
           } else {
             newState = spawnNewPiece(newState);
@@ -297,7 +311,11 @@ export default function App() {
 
       return newState;
     });
-  }, [checkCollision, placePiece, clearLines, calculateScore, spawnNewPiece]);
+
+    if (shouldAskQuestion) {
+      loadNextQuestion().catch(() => {});
+    }
+  }, [checkCollision, placePiece, clearLines, calculateScore, spawnNewPiece, loadNextQuestion]);
 
   // Handle game over
   useEffect(() => {
@@ -451,6 +469,7 @@ export default function App() {
     setQuestionsAnswered(0);
     setCurrentQuestion(null);
     setUsedQuestionIds([]);
+    usedQuestionIdsRef.current = [];
     setGameTime(0);
     dropIntervalRef.current = 1000;
   }, [getRandomPiece]);
@@ -459,29 +478,17 @@ export default function App() {
   const handlePlayAgain = useCallback(() => {
     resetGame();
     setTimeout(() => {
-      // Start with first question
-      const firstQuestion = getRandomQuestion([]);
-      setCurrentQuestion(firstQuestion);
-      setUsedQuestionIds([firstQuestion.id]);
-      setQuestionsAnswered(0);
-      dropIntervalRef.current = 1000; // Reset to level 1 speed
-      setGamePhase('question');
+      startQuestionFlow();
     }, 100);
-  }, [resetGame]);
+  }, [resetGame, startQuestionFlow]);
 
   // Handle game over restart
   const handleGameOverRestart = useCallback(() => {
     resetGame();
     setTimeout(() => {
-      // Start with first question
-      const firstQuestion = getRandomQuestion([]);
-      setCurrentQuestion(firstQuestion);
-      setUsedQuestionIds([firstQuestion.id]);
-      setQuestionsAnswered(0);
-      dropIntervalRef.current = 1000; // Reset to level 1 speed
-      setGamePhase('question');
+      startQuestionFlow();
     }, 100);
-  }, [resetGame]);
+  }, [resetGame, startQuestionFlow]);
 
   const isQualifyingScore = highScoreManager.isQualifyingScore(gameState.score);
 
@@ -493,13 +500,8 @@ export default function App() {
       {gamePhase === 'menu' && (
         <WelcomeScreen
           onStartGame={() => {
-            // Start with first question
-            const firstQuestion = getRandomQuestion([]);
-            setCurrentQuestion(firstQuestion);
-            setUsedQuestionIds([firstQuestion.id]);
-            setQuestionsAnswered(0);
-            dropIntervalRef.current = 1000; // Reset to level 1 speed
-            setGamePhase('question');
+            // Start with first question (async)
+            startQuestionFlow();
           }}
           highScore={highScoreManager.getHighScores()[0]?.score || 0}
         />

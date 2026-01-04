@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { FileText, Trophy, CheckCircle2, XCircle } from 'lucide-react';
-import { getQuestionsForLevel, calculateQuizBonus, type Question } from './questionBank';
+import { getQuestionsForLevel, calculateQuizBonus, type Question } from './questionService';
 import { soundEffects } from './soundEffects';
 
 interface LevelUpQuizDialogProps {
@@ -24,14 +24,17 @@ export function LevelUpQuizDialog({ open, level, onComplete }: LevelUpQuizDialog
   // Initialize quiz when dialog opens
   useEffect(() => {
     if (open) {
-      const newQuestions = getQuestionsForLevel(level, 3);
-      setQuestions(newQuestions);
-      setCurrentQuestionIndex(0);
-      setSelectedAnswer(null);
-      setShowExplanation(false);
-      setCorrectAnswers(0);
-      setIsComplete(false);
-      setBonusPoints(0);
+      const load = async () => {
+        const newQuestions = await getQuestionsForLevel(level, 3);
+        setQuestions(newQuestions);
+        setCurrentQuestionIndex(0);
+        setSelectedAnswer(null);
+        setShowExplanation(false);
+        setCorrectAnswers(0);
+        setIsComplete(false);
+        setBonusPoints(0);
+      };
+      load();
     }
   }, [open, level]);
 
@@ -62,8 +65,8 @@ export function LevelUpQuizDialog({ open, level, onComplete }: LevelUpQuizDialog
 
   const handleNextQuestion = () => {
     if (isLastQuestion) {
-      // Calculate final bonus - correctAnswers was already updated in handleSubmitAnswer
-      const bonus = calculateQuizBonus(correctAnswers, questions.length, level);
+      // Calculate final bonus - updated service returns a constant bonus
+      const bonus = calculateQuizBonus();
       setBonusPoints(bonus);
       setIsComplete(true);
     } else {
@@ -182,7 +185,8 @@ export function LevelUpQuizDialog({ open, level, onComplete }: LevelUpQuizDialog
   }
 
   // Question screen
-  const isAnswerCorrect = selectedAnswer === currentQuestion.correctAnswer;
+  const options = currentQuestion ? [currentQuestion.option1, currentQuestion.option2, currentQuestion.option3, currentQuestion.option4] : [];
+  const isAnswerCorrect = selectedAnswer === currentQuestion?.correctAnswer;
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -239,18 +243,14 @@ export function LevelUpQuizDialog({ open, level, onComplete }: LevelUpQuizDialog
             <h3 className="text-base text-gray-800 mb-3">
               {currentQuestion.question}
             </h3>
-            {currentQuestion.scenario && (
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {currentQuestion.scenario}
-              </p>
-            )}
+            {/* CSV-based questions do not include a scenario field */}
           </div>
 
-          {/* Answer Options */}
+            {/* Answer Options */}
           <div className="space-y-3 pt-2">
-            {currentQuestion.options.map((option, index) => {
+            {options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrectOption = index === currentQuestion.correctAnswer;
+              const isCorrectOption = index === currentQuestion?.correctAnswer;
               
               let cardStyle = "bg-white border-2 border-gray-200 hover:border-teal-300 hover:bg-teal-50/30";
               

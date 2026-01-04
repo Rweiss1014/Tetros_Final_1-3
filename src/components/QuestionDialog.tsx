@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { FileText, CheckCircle2, XCircle, Clock, Zap } from 'lucide-react';
-import { type Question } from './questionBank';
+import { type Question } from './questionService';
 import { soundEffects } from './soundEffects';
 
 interface QuestionDialogProps {
@@ -77,8 +77,8 @@ export function QuestionDialog({ open, question, questionNumber, totalQuestions,
       clearInterval(timerRef.current);
     }
 
-    const finalTimeElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    const isCorrect = answerIndex === question.correctAnswer;
+      const finalTimeElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      const isCorrect = answerIndex === question.correctAnswer;
     
     if (isCorrect) {
       soundEffects.correct();
@@ -95,6 +95,7 @@ export function QuestionDialog({ open, question, questionNumber, totalQuestions,
   };
 
   const timeProgress = (timeRemaining / TIME_LIMIT) * 100;
+  const options = question ? [question.option1, question.option2, question.option3, question.option4] : [];
   const isAnswerCorrect = selectedAnswer === question.correctAnswer;
   
   // Get color based on time remaining
@@ -184,16 +185,12 @@ export function QuestionDialog({ open, question, questionNumber, totalQuestions,
             <h3 className="text-sm text-gray-800 mb-2">
               {question.question}
             </h3>
-            {question.scenario && (
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {question.scenario}
-              </p>
-            )}
+            {/* scenario removed - questions loaded from CSV contain only a single `question` string */}
           </div>
 
           {/* Answer Options */}
           <div className="space-y-2 pt-1">
-            {question.options.map((option, index) => {
+            {options.map((option, index) => {
               const isSelected = selectedAnswer === index;
               const isCorrectOption = index === question.correctAnswer;
               

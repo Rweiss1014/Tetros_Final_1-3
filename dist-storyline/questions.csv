@@ -1,0 +1,7 @@
+id,question,option1,option2,option3,option4,correctAnswer,category,difficulty,explanation
+1,What is the BEST first step?RR,Apologize,Escalate,Ignore,Refund,0,Customer Service,1,Always verify the concern and respond with empathy
+2,What should you say if the client sounds upset?RR,Stay calm,Talk over them,Hang up,Ignore them,0,Soft Skills,2,A calm response helps de-escalate the situation
+3,How should you respond if you are unsure of an answer?RR,Make a guess,Admit uncertainty and research,Redirect immediately,End the call,1,Customer Service,2,Being transparent and researching builds trust
+4,What is 12 + 8?,18,19,20,21,2,Mathematics,1,12 plus 8 equals 20
+5,If a product is 25% off $40, what is the sale price?,$30,$28,$25,$20,1,Mathematics,2,25% of 40 is 10 so 40 - 10 = 30
+6,How should you prioritize tasks when a customer is waiting?,Serve the customer first,Finish paperwork first,Take a break,Ignore the customer,0,Customer Service,1,Attending to the waiting customer shows respect and urgency
