@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+    <title>Tetris Training - Storyline Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #1e293b;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        #root {
+            width: 1280px;
+            height: 720px;
+            margin: 0 auto;
+        }
+        .storyline-instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .storyline-instructions.hidden {
+            display: none;
+        }
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="storyline-instructions" id="instructions">
+        <span class="close-btn" onclick="document.getElementById('instructions').classList.add('hidden')">✕</span>
+        <strong>Storyline Test Mode</strong><br>
+        Click the game and use arrow keys to play.<br>
+        This simulates how it will appear in Storyline.
+    </div>
+    <div id="root"></div>
+    
+    <script>
+        // Optional: Post score to parent window (for Storyline communication)
+        window.postScoreToStoryline = function(score, level, lines) {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'TETRIS_SCORE',
+                    score: score,
+                    level: level,
+                    lines: lines
+                }, '*');
+            }
+        };
+
+        // Listen for game over or level completion events
+        // This would need to be integrated into your React app
+        window.addEventListener('message', function(event) {
+            // Handle messages from Storyline if needed
+            console.log('Message from Storyline:', event.data);
+        });
+    </script>
+</body>
+</html>
